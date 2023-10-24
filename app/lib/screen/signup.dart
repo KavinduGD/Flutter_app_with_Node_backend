@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'package:app/screen/dashboard.dart';
 import 'package:app/widget/logo.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import "package:http/http.dart" as http;
 
 class Signup extends StatefulWidget {
   const Signup({Key? key}) : super(key: key);
@@ -18,7 +21,6 @@ class _SignupState extends State<Signup> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     initSharedPref();
   }
@@ -27,11 +29,53 @@ class _SignupState extends State<Signup> {
     prefs = await SharedPreferences.getInstance();
   }
 
-  void loginUser() {
-    print("email" + _emailController.text);
-    ;
-    print("password" + _passwordController.text);
-    ;
+  void loginUser() async {
+    if (_emailController.text.isNotEmpty &&
+        _passwordController.text.isNotEmpty) {
+      var user = {
+        "email": _emailController.text,
+        "password": _passwordController.text
+      };
+
+      var response = await http.post(
+        Uri.parse("http://192.168.1.2:4000/api/user/login"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(user),
+      );
+
+      var decodedResponse = jsonDecode(response.body);
+
+      //print("body is this man2" + decodedResponse["token"].toString());
+
+      if (decodedResponse["status"]) {
+        final token = decodedResponse["token"];
+        print(token);
+        prefs.setString("token", token);
+
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => Dashboard(token: token),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Wrong Password",
+              style: GoogleFonts.roboto(
+                fontSize: 18,
+                color: Colors.white,
+              ),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else {
+      setState(() {
+        _isNotValidate = true;
+      });
+    }
   }
 
   @override

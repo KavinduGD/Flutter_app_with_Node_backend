@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:app/config/config.dart';
 import 'package:app/screen/signup.dart';
 import 'package:app/widget/logo.dart';
@@ -20,25 +19,29 @@ class _RegistrationState extends State<Registration> {
   bool _isNotValidate = false;
 
   registerUser() async {
-    print("email" + _emailController.text);
     if (_emailController.text.isNotEmpty &&
         _passwordController.text.isNotEmpty) {
       var user = {
         "email": _emailController.text,
         "password": _passwordController.text
       };
-      print(user);
+
       var response = await http.post(
         Uri.parse("http://192.168.1.2:4000/api/user/register"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(user),
       );
 
-      print("body is" + response.body);
+      var decodedResponse = jsonDecode(response.body);
 
-      print("email" + _emailController.text);
-      // print("password" + _passwordController.text);
-      // print("validate");
+      print("body is this man2" + decodedResponse['status'].toString());
+      if (decodedResponse['status']) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => Signup(),
+          ),
+        );
+      }
     } else {
       setState(() {
         _isNotValidate = true;
